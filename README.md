@@ -1,23 +1,28 @@
-# 💰 Sistem Gaji Karyawan
+# Sistem Gaji Karyawan
 
-Aplikasi web manajemen penggajian karyawan berbasis **Laravel** dengan tampilan modern menggunakan **Bootstrap 5** dan interaksi dinamis menggunakan **AJAX**.
+Aplikasi web manajemen penggajian karyawan berbasis **Laravel** dengan tampilan modern menggunakan **Bootstrap 5** dan interaksi dinamis menggunakan **AJAX (Fetch API)**.
+
+![Laravel](https://img.shields.io/badge/Laravel-13.x-red?style=flat-square&logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.3+-blue?style=flat-square&logo=php)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?style=flat-square&logo=bootstrap)
+![MySQL](https://img.shields.io/badge/MySQL-5.7+-orange?style=flat-square&logo=mysql)
 
 ---
 
-## 🖥️ Tampilan Aplikasi
+## Tampilan Aplikasi
 
 | Halaman | Deskripsi |
 |---|---|
 | Login / Daftar | Autentikasi pengguna |
 | Dashboard | Statistik ringkasan + data terbaru |
-| Departemen | CRUD via modal AJAX |
+| Departemen | CRUD via modal AJAX tanpa reload |
 | Jabatan | CRUD dengan relasi departemen |
 | Karyawan | CRUD via modal AJAX + soft delete |
 | Penggajian | CRUD + preview kalkulasi gaji real-time |
 
 ---
 
-## ⚙️ Teknologi yang Digunakan
+## Teknologi yang Digunakan
 
 | Teknologi | Versi | Keterangan |
 |---|---|---|
@@ -26,12 +31,12 @@ Aplikasi web manajemen penggajian karyawan berbasis **Laravel** dengan tampilan 
 | MySQL | 5.7+ | Database |
 | Bootstrap | 5.3 | Framework CSS |
 | Bootstrap Icons | 1.11 | Ikon UI |
-| AJAX (Fetch API) | — | Interaksi tanpa reload halaman |
-| Google Fonts (Inter) | — | Tipografi |
+| AJAX (Fetch API) | - | Interaksi tanpa reload halaman |
+| Google Fonts (Inter) | - | Tipografi |
 
 ---
 
-## 📁 Struktur Fitur
+## Struktur Fitur
 
 ```
 payroll-system/
@@ -63,7 +68,7 @@ payroll-system/
 
 ---
 
-## 🗄️ Struktur Database
+## Struktur Database
 
 ```
 departments
@@ -81,42 +86,43 @@ payrolls
 ```
 
 **Relasi:**
+
 ```
-Department → Role (1:N)
-Role       → Employee (1:N)
-Employee   → Payroll (1:N)
+Department  -->  Role (1:N)
+Role        -->  Employee (1:N)
+Employee    -->  Payroll (1:N)
 ```
 
 ---
 
-## 🧮 Rumus Kalkulasi Gaji
+## Rumus Kalkulasi Gaji
 
 ```
-Total Gaji = (Hari Kerja ÷ 22 × Gaji Pokok)
-           + (Jam Lembur × Tarif Lembur)
+Total Gaji = (Hari Kerja / 22 x Gaji Pokok)
+           + (Jam Lembur x Tarif Lembur)
            + Bonus
-           − Potongan
+           - Potongan
 
-Tarif Lembur = (Gaji Pokok ÷ 22 ÷ 8) × 1.5
+Tarif Lembur = (Gaji Pokok / 22 / 8) x 1.5
 ```
 
 ---
 
-## ⚡ Fitur AJAX
+## Fitur AJAX
 
 | Fitur | Endpoint | Keterangan |
 |---|---|---|
 | Tambah Departemen | `POST /departemen` | Modal, tanpa reload |
-| Ubah Departemen | `PUT /departemen/{id}` | Fetch data lalu modal |
-| Hapus Departemen | `DELETE /departemen/{id}` | Hapus baris langsung |
+| Ubah Departemen | `PUT /departemen/{id}` | Fetch data lalu tampil di modal |
+| Hapus Departemen | `DELETE /departemen/{id}` | Hapus baris langsung dari tabel |
 | Tambah Karyawan | `POST /karyawan` | Modal form lengkap |
-| Ubah Karyawan | `PUT /karyawan/{id}` | Fetch data lalu modal |
-| Hapus Karyawan | `DELETE /karyawan/{id}` | Soft delete, hapus baris |
+| Ubah Karyawan | `PUT /karyawan/{id}` | Fetch data lalu tampil di modal |
+| Hapus Karyawan | `DELETE /karyawan/{id}` | Soft delete, hapus baris langsung |
 | Preview Gaji | `POST /penggajian/preview` | Kalkulasi real-time (debounce 400ms) |
 
 ---
 
-## 🚀 Cara Instalasi
+## Cara Instalasi
 
 ### Prasyarat
 - PHP >= 8.3
@@ -127,22 +133,26 @@ Tarif Lembur = (Gaji Pokok ÷ 22 ÷ 8) × 1.5
 ### Langkah Instalasi
 
 **1. Clone repository**
+
 ```bash
 git clone https://github.com/AzrilRyzcho/payroll-system.git
 cd payroll-system
 ```
 
 **2. Install dependensi PHP**
+
 ```bash
 composer install
 ```
 
 **3. Salin file environment**
+
 ```bash
 cp .env.example .env
 ```
 
 **4. Generate application key**
+
 ```bash
 php artisan key:generate
 ```
@@ -150,6 +160,7 @@ php artisan key:generate
 **5. Konfigurasi database**
 
 Edit file `.env`:
+
 ```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -160,34 +171,46 @@ DB_PASSWORD=
 ```
 
 **6. Buat database**
+
 ```sql
 CREATE DATABASE payroll_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 **7. Jalankan migrasi**
+
 ```bash
 php artisan migrate
 ```
 
-**8. (Opsional) Buat akun admin via tinker**
+**8. Buat akun admin (opsional)**
+
 ```bash
 php artisan tinker
->>> App\Models\User::create(['name'=>'Admin','email'=>'admin@admin.com','password'=>bcrypt('password123')]);
+```
+
+```php
+App\Models\User::create([
+    'name'     => 'Admin',
+    'email'    => 'admin@admin.com',
+    'password' => bcrypt('password123')
+]);
 ```
 
 **9. Jalankan server**
+
 ```bash
 php artisan serve
 ```
 
 **10. Akses aplikasi**
+
 ```
 http://127.0.0.1:8000
 ```
 
 ---
 
-## 👤 Akun Default (setelah seeder)
+## Akun Default
 
 | Field | Value |
 |---|---|
@@ -198,15 +221,15 @@ Atau daftar akun baru melalui halaman `/daftar`.
 
 ---
 
-## 📋 Daftar Route Utama
+## Daftar Route Utama
 
 | Method | URI | Nama | Keterangan |
 |---|---|---|---|
 | GET | `/` | `home` | Halaman utama |
 | GET | `/masuk` | `login` | Form login |
-| POST | `/masuk` | — | Proses login |
+| POST | `/masuk` | - | Proses login |
 | GET | `/daftar` | `register` | Form daftar |
-| POST | `/daftar` | — | Proses daftar |
+| POST | `/daftar` | - | Proses daftar |
 | POST | `/keluar` | `logout` | Logout |
 | GET | `/dashboard` | `dashboard` | Dashboard |
 | Resource | `/departemen` | `departemen.*` | CRUD Departemen |
@@ -220,7 +243,7 @@ Atau daftar akun baru melalui halaman `/daftar`.
 
 ---
 
-## 🔒 Keamanan
+## Keamanan
 
 - Semua route dilindungi middleware `auth` kecuali halaman publik
 - CSRF token pada setiap form dan request AJAX
@@ -230,7 +253,7 @@ Atau daftar akun baru melalui halaman `/daftar`.
 
 ---
 
-## 👨‍💻 Developer
+## Developer
 
 | | |
 |---|---|
@@ -240,6 +263,6 @@ Atau daftar akun baru melalui halaman `/daftar`.
 
 ---
 
-## 📄 Lisensi
+## Lisensi
 
 Proyek ini dibuat untuk keperluan pembelajaran. Bebas digunakan dan dimodifikasi.
