@@ -257,7 +257,7 @@ Atau daftar akun baru melalui halaman `/daftar`.
 
 | | |
 |---|---|
-| **Nama** | Azril Ryzcho |
+| **Nama** | M. AZRIL RAYZICHO SORONGAN |
 | **Email** | isukirman196@gmail.com |
 | **GitHub** | [@AzrilRyzcho](https://github.com/AzrilRyzcho) |
 
