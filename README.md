@@ -1,58 +1,245 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 💰 Sistem Gaji Karyawan
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web manajemen penggajian karyawan berbasis **Laravel** dengan tampilan modern menggunakan **Bootstrap 5** dan interaksi dinamis menggunakan **AJAX**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🖥️ Tampilan Aplikasi
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Halaman | Deskripsi |
+|---|---|
+| Login / Daftar | Autentikasi pengguna |
+| Dashboard | Statistik ringkasan + data terbaru |
+| Departemen | CRUD via modal AJAX |
+| Jabatan | CRUD dengan relasi departemen |
+| Karyawan | CRUD via modal AJAX + soft delete |
+| Penggajian | CRUD + preview kalkulasi gaji real-time |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## ⚙️ Teknologi yang Digunakan
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Teknologi | Versi | Keterangan |
+|---|---|---|
+| PHP | 8.3+ | Bahasa pemrograman utama |
+| Laravel | 13.x | Framework PHP |
+| MySQL | 5.7+ | Database |
+| Bootstrap | 5.3 | Framework CSS |
+| Bootstrap Icons | 1.11 | Ikon UI |
+| AJAX (Fetch API) | — | Interaksi tanpa reload halaman |
+| Google Fonts (Inter) | — | Tipografi |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 📁 Struktur Fitur
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+payroll-system/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── AuthController.php          # Login, Register, Logout
+│   │   ├── DashboardController.php     # Statistik dashboard
+│   │   ├── DepartmentController.php    # CRUD Departemen (AJAX)
+│   │   ├── RoleController.php          # CRUD Jabatan
+│   │   ├── EmployeeController.php      # CRUD Karyawan (AJAX + Soft Delete)
+│   │   └── PayrollController.php       # CRUD Penggajian + Preview AJAX
+│   └── Models/
+│       ├── Department.php              # Relasi: hasMany Role
+│       ├── Role.php                    # Relasi: belongsTo Dept, hasMany Employee
+│       ├── Employee.php                # Relasi: belongsTo Role, hasMany Payroll
+│       └── Payroll.php                 # Relasi: belongsTo Employee + hitungTotalGaji()
+├── database/
+│   ├── migrations/                     # Skema tabel
+│   └── seeders/                        # Data awal
+├── resources/views/
+│   ├── layouts/app.blade.php           # Layout utama (sidebar + topbar)
+│   ├── auth/                           # Login & Register
+│   ├── departemen/                     # Views departemen
+│   ├── jabatan/                        # Views jabatan
+│   ├── karyawan/                       # Views karyawan + tempat sampah
+│   └── penggajian/                     # Views penggajian + preview
+└── routes/web.php                      # Semua route aplikasi
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## 🗄️ Struktur Database
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```
+departments
+├── id, name, timestamps
 
-## Code of Conduct
+roles
+├── id, department_id (FK), name, salary, timestamps
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+employees
+├── id, role_id (FK), name, email, phone, address, timestamps, deleted_at
 
-## Security Vulnerabilities
+payrolls
+├── id, employee_id (FK), work_days, overtime_hours
+├── bonus, deduction, total_salary, payroll_date, timestamps
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Relasi:**
+```
+Department → Role (1:N)
+Role       → Employee (1:N)
+Employee   → Payroll (1:N)
+```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🧮 Rumus Kalkulasi Gaji
+
+```
+Total Gaji = (Hari Kerja ÷ 22 × Gaji Pokok)
+           + (Jam Lembur × Tarif Lembur)
+           + Bonus
+           − Potongan
+
+Tarif Lembur = (Gaji Pokok ÷ 22 ÷ 8) × 1.5
+```
+
+---
+
+## ⚡ Fitur AJAX
+
+| Fitur | Endpoint | Keterangan |
+|---|---|---|
+| Tambah Departemen | `POST /departemen` | Modal, tanpa reload |
+| Ubah Departemen | `PUT /departemen/{id}` | Fetch data lalu modal |
+| Hapus Departemen | `DELETE /departemen/{id}` | Hapus baris langsung |
+| Tambah Karyawan | `POST /karyawan` | Modal form lengkap |
+| Ubah Karyawan | `PUT /karyawan/{id}` | Fetch data lalu modal |
+| Hapus Karyawan | `DELETE /karyawan/{id}` | Soft delete, hapus baris |
+| Preview Gaji | `POST /penggajian/preview` | Kalkulasi real-time (debounce 400ms) |
+
+---
+
+## 🚀 Cara Instalasi
+
+### Prasyarat
+- PHP >= 8.3
+- Composer
+- MySQL
+- XAMPP / Laragon / server lokal lainnya
+
+### Langkah Instalasi
+
+**1. Clone repository**
+```bash
+git clone https://github.com/AzrilRyzcho/payroll-system.git
+cd payroll-system
+```
+
+**2. Install dependensi PHP**
+```bash
+composer install
+```
+
+**3. Salin file environment**
+```bash
+cp .env.example .env
+```
+
+**4. Generate application key**
+```bash
+php artisan key:generate
+```
+
+**5. Konfigurasi database**
+
+Edit file `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=payroll_db
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+**6. Buat database**
+```sql
+CREATE DATABASE payroll_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+**7. Jalankan migrasi**
+```bash
+php artisan migrate
+```
+
+**8. (Opsional) Buat akun admin via tinker**
+```bash
+php artisan tinker
+>>> App\Models\User::create(['name'=>'Admin','email'=>'admin@admin.com','password'=>bcrypt('password123')]);
+```
+
+**9. Jalankan server**
+```bash
+php artisan serve
+```
+
+**10. Akses aplikasi**
+```
+http://127.0.0.1:8000
+```
+
+---
+
+## 👤 Akun Default (setelah seeder)
+
+| Field | Value |
+|---|---|
+| Email | `admin@admin.com` |
+| Password | `password123` |
+
+Atau daftar akun baru melalui halaman `/daftar`.
+
+---
+
+## 📋 Daftar Route Utama
+
+| Method | URI | Nama | Keterangan |
+|---|---|---|---|
+| GET | `/` | `home` | Halaman utama |
+| GET | `/masuk` | `login` | Form login |
+| POST | `/masuk` | — | Proses login |
+| GET | `/daftar` | `register` | Form daftar |
+| POST | `/daftar` | — | Proses daftar |
+| POST | `/keluar` | `logout` | Logout |
+| GET | `/dashboard` | `dashboard` | Dashboard |
+| Resource | `/departemen` | `departemen.*` | CRUD Departemen |
+| Resource | `/jabatan` | `jabatan.*` | CRUD Jabatan |
+| Resource | `/karyawan` | `karyawan.*` | CRUD Karyawan |
+| GET | `/karyawan/sampah` | `karyawan.sampah` | Tempat sampah |
+| POST | `/karyawan/{id}/pulihkan` | `karyawan.pulihkan` | Pulihkan karyawan |
+| DELETE | `/karyawan/{id}/hapus-permanent` | `karyawan.hapusPermanent` | Hapus permanen |
+| Resource | `/penggajian` | `penggajian.*` | CRUD Penggajian |
+| POST | `/penggajian/preview` | `penggajian.preview` | Preview kalkulasi (AJAX) |
+
+---
+
+## 🔒 Keamanan
+
+- Semua route dilindungi middleware `auth` kecuali halaman publik
+- CSRF token pada setiap form dan request AJAX
+- Validasi input di sisi server pada setiap controller
+- Password di-hash menggunakan `bcrypt`
+- Soft delete untuk data karyawan (tidak langsung dihapus permanen)
+
+---
+
+## 👨‍💻 Developer
+
+| | |
+|---|---|
+| **Nama** | Azril Ryzcho |
+| **Email** | isukirman196@gmail.com |
+| **GitHub** | [@AzrilRyzcho](https://github.com/AzrilRyzcho) |
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dibuat untuk keperluan pembelajaran. Bebas digunakan dan dimodifikasi.
