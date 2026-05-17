@@ -64,7 +64,11 @@ class AbsensiController extends Controller
         }
 
         if ($request->jam_keluar) {
-            $jamLembur = Attendance::hitungJamLembur($request->jam_keluar . ':00', $setting);
+            $jamLembur = Attendance::hitungJamLembur(
+                $request->jam_keluar . ':00',
+                $setting,
+                $request->jam_masuk ? $request->jam_masuk . ':00' : null
+            );
         }
 
         $data = [
@@ -159,7 +163,11 @@ class AbsensiController extends Controller
         }
 
         if ($request->jam_keluar) {
-            $jamLembur = Attendance::hitungJamLembur($request->jam_keluar . ':00', $setting);
+            $jamLembur = Attendance::hitungJamLembur(
+                $request->jam_keluar . ':00',
+                $setting,
+                $request->jam_masuk ? $request->jam_masuk . ':00' : null
+            );
         }
 
         $absensi->update([

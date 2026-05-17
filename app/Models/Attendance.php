@@ -60,36 +60,54 @@ class Attendance extends Model
     }
 
     /**
-     * Hitung menit terlambat otomatis dari jam_masuk
+     * Hitung menit terlambat otomatis dari jam_masuk.
+     * Mengembalikan selisih menit dari jam masuk normal (bukan dari batas toleransi).
+     * Toleransi hanya dipakai untuk menentukan status, bukan untuk mengurangi hitungan potongan.
      */
     public static function hitungMenitTerlambat(string $jamMasuk, AttendanceSetting $setting): int
     {
         $masuk       = Carbon::createFromTimeString($jamMasuk);
-        $batasNormal = Carbon::createFromTimeString($setting->jam_masuk_normal)
-                             ->addMinutes($setting->toleransi_menit);
+        $jamNormal   = Carbon::createFromTimeString($setting->jam_masuk_normal);
+        $batasToleransi = (clone $jamNormal)->addMinutes($setting->toleransi_menit);
 
-        if ($masuk->gt($batasNormal)) {
-            return $masuk->diffInMinutes(
-                Carbon::createFromTimeString($setting->jam_masuk_normal)
-            );
+        // Jika masih dalam toleransi, tidak dihitung terlambat
+        if ($masuk->lte($batasToleransi)) {
+            return 0;
         }
 
-        return 0;
+        // Terlambat = selisih dari jam masuk normal
+        return $masuk->diffInMinutes($jamNormal);
     }
 
     /**
-     * Hitung jam lembur otomatis dari jam_keluar
+     * Hitung jam lembur otomatis dari jam_keluar.
+     * Lembur hanya valid jika:
+     * 1. Jam keluar melebihi jam pulang normal
+     * 2. Karyawan masuk tidak lebih dari 4 jam setelah jam masuk normal
+     *    (mencegah karyawan yang masuk sore dihitung lembur)
      */
-    public static function hitungJamLembur(string $jamKeluar, AttendanceSetting $setting): float
+    public static function hitungJamLembur(string $jamKeluar, AttendanceSetting $setting, ?string $jamMasuk = null): float
     {
         $keluar      = Carbon::createFromTimeString($jamKeluar);
         $batasNormal = Carbon::createFromTimeString($setting->jam_keluar_normal);
 
-        if ($keluar->gt($batasNormal)) {
-            return round($keluar->diffInMinutes($batasNormal) / 60, 2);
+        if (!$keluar->gt($batasNormal)) {
+            return 0;
         }
 
-        return 0;
+        // Validasi: jika ada jam masuk, cek apakah masuk tidak terlalu siang
+        if ($jamMasuk) {
+            $masuk     = Carbon::createFromTimeString($jamMasuk);
+            $jamNormal = Carbon::createFromTimeString($setting->jam_masuk_normal);
+            $selisihMasukMenit = $masuk->diffInMinutes($jamNormal, false);
+
+            // Jika masuk lebih dari 4 jam (240 menit) setelah jam normal → tidak dihitung lembur
+            if ($selisihMasukMenit > 240) {
+                return 0;
+            }
+        }
+
+        return round($keluar->diffInMinutes($batasNormal) / 60, 2);
     }
 
     /**

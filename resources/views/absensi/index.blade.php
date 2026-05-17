@@ -246,6 +246,11 @@
                                 <span id="infoLembur" class="fw-600 ms-1">-</span>
                             </div>
                         </div>
+                        <div class="mt-2" style="color:#8a9bb0;font-size:.72rem;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Lembur dihitung jika pulang setelah {{ substr($setting->jam_keluar_normal, 0, 5) }}
+                            dan masuk tidak lebih dari 4 jam setelah jam masuk normal.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid #eef0f4;">
@@ -318,33 +323,65 @@ function hitungOtomatis() {
 
     // Hitung terlambat
     if (jamMasuk) {
-        const [jm, mm] = jamMasuk.split(':').map(Number);
-        const [jn, mn] = JAM_MASUK_NORMAL.split(':').map(Number);
+        const [jm, mm]   = jamMasuk.split(':').map(Number);
+        const [jn, mn]   = JAM_MASUK_NORMAL.split(':').map(Number);
         const menitMasuk  = jm * 60 + mm;
-        const menitNormal = jn * 60 + mn + TOLERANSI;
-        const terlambat   = Math.max(0, menitMasuk - (jn * 60 + mn));
+        const menitNormal = jn * 60 + mn;
+        // Terlambat = selisih dari jam masuk normal (bukan + toleransi, toleransi hanya untuk status)
+        const terlambat   = Math.max(0, menitMasuk - menitNormal);
+        const melebihiToleransi = terlambat > TOLERANSI;
 
-        document.getElementById('infoTerlambat').textContent =
-            terlambat > TOLERANSI ? `${terlambat} menit` : 'Tepat waktu';
+        if (terlambat === 0) {
+            document.getElementById('infoTerlambat').textContent = 'Tepat waktu';
+            document.getElementById('infoTerlambat').style.color = '#27ae60';
+        } else if (!melebihiToleransi) {
+            document.getElementById('infoTerlambat').textContent = `${terlambat} menit (dalam toleransi)`;
+            document.getElementById('infoTerlambat').style.color = '#27ae60';
+        } else {
+            document.getElementById('infoTerlambat').textContent = `${terlambat} menit`;
+            document.getElementById('infoTerlambat').style.color = '#e67e22';
+        }
 
         // Auto set status
         const statusEl = document.getElementById('absensiStatus');
-        if (terlambat > TOLERANSI && statusEl.value === 'hadir') {
+        if (melebihiToleransi && statusEl.value === 'hadir') {
             statusEl.value = 'terlambat';
+        } else if (!melebihiToleransi && statusEl.value === 'terlambat') {
+            statusEl.value = 'hadir';
         }
     }
 
-    // Hitung lembur
+    // Hitung lembur — hanya valid jika jam keluar > jam pulang normal
+    // DAN jam masuk tidak terlalu jauh dari jam masuk normal (bukan shift sore)
     if (jamKeluar) {
-        const [jk, mk] = jamKeluar.split(':').map(Number);
-        const [jp, mp] = JAM_KELUAR_NORMAL.split(':').map(Number);
+        const [jk, mk]   = jamKeluar.split(':').map(Number);
+        const [jp, mp]   = JAM_KELUAR_NORMAL.split(':').map(Number);
         const menitKeluar = jk * 60 + mk;
         const menitPulang = jp * 60 + mp;
         const lemburMenit = Math.max(0, menitKeluar - menitPulang);
-        const lemburJam   = (lemburMenit / 60).toFixed(2);
 
-        document.getElementById('infoLembur').textContent =
-            lemburMenit > 0 ? `${lemburJam} jam` : 'Tidak ada';
+        // Lembur hanya dihitung jika karyawan hadir (ada jam masuk)
+        // dan jam masuk tidak lebih dari 4 jam setelah jam masuk normal
+        let lemburValid = false;
+        if (jamMasuk) {
+            const [jm, mm] = jamMasuk.split(':').map(Number);
+            const [jn, mn] = JAM_MASUK_NORMAL.split(':').map(Number);
+            const selisihMasuk = (jm * 60 + mm) - (jn * 60 + mn);
+            // Dianggap lembur valid jika masuk tidak lebih dari 4 jam terlambat
+            lemburValid = selisihMasuk <= 240;
+        }
+
+        if (lemburMenit > 0 && lemburValid) {
+            const lemburJam = (lemburMenit / 60).toFixed(2);
+            document.getElementById('infoLembur').textContent = `${lemburJam} jam`;
+            document.getElementById('infoLembur').style.color = '#4f8ef7';
+        } else if (lemburMenit > 0 && !lemburValid) {
+            document.getElementById('infoLembur').textContent = 'Tidak dihitung (masuk terlalu siang)';
+            document.getElementById('infoLembur').style.color = '#8a9bb0';
+        } else {
+            document.getElementById('infoLembur').textContent = 'Tidak ada';
+            document.getElementById('infoLembur').style.color = '#8a9bb0';
+        }
     }
 }
 
