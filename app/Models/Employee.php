@@ -20,4 +20,9 @@ class Employee extends Model
     {
         return $this->hasMany(Payroll::class);
     }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

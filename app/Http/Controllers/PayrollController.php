@@ -33,19 +33,47 @@ class PayrollController extends Controller
     {
         $request->validate([
             'employee_id'    => 'required|exists:employees,id',
-            'work_days'      => 'required|integer|min:0|max:31',
+            'bulan'          => 'nullable|integer|min:1|max:12',
+            'tahun'          => 'nullable|integer|min:2020',
+            'work_days'      => 'nullable|integer|min:0|max:31',
             'overtime_hours' => 'nullable|integer|min:0',
             'bonus'          => 'nullable|numeric|min:0',
             'deduction'      => 'nullable|numeric|min:0',
         ]);
 
-        $employee      = Employee::with('role')->findOrFail($request->employee_id);
-        $overtimeHours = (int) ($request->overtime_hours ?? 0);
-        $bonus         = (float) ($request->bonus ?? 0);
-        $deduction     = (float) ($request->deduction ?? 0);
-        $workDays      = (int) $request->work_days;
+        $employee  = Employee::with('role')->findOrFail($request->employee_id);
+        $gajiPokok = $employee->role->salary ?? 0;
 
-        $gajiPokok   = $employee->role->salary ?? 0;
+        // Jika ada bulan/tahun, ambil dari rekap absensi
+        $rekapAbsensi = null;
+        $workDays     = (int) ($request->work_days ?? 22);
+        $overtimeHours = (int) ($request->overtime_hours ?? 0);
+        $deduction    = (float) ($request->deduction ?? 0);
+
+        if ($request->filled('bulan') && $request->filled('tahun')) {
+            $rekapAbsensi = \App\Models\Attendance::rekapBulanan(
+                $request->employee_id,
+                $request->bulan,
+                $request->tahun
+            );
+
+            // Hitung potongan alpha = 1 hari gaji jika setting = 0
+            $setting = \App\Models\AttendanceSetting::getSetting();
+            if ($setting->potongan_alpha == 0 && $rekapAbsensi['hari_alpha'] > 0) {
+                $gajiHarian = $gajiPokok / $setting->hari_kerja_sebulan;
+                $rekapAbsensi['potongan_alpha'] = $gajiHarian * $rekapAbsensi['hari_alpha'];
+                $rekapAbsensi['total_potongan'] = $rekapAbsensi['potongan_terlambat']
+                    + $rekapAbsensi['potongan_alpha']
+                    + $rekapAbsensi['potongan_izin'];
+            }
+
+            $workDays      = $rekapAbsensi['hari_hadir'];
+            $overtimeHours = (int) floor($rekapAbsensi['total_lembur']);
+            $deduction     = $rekapAbsensi['total_potongan'];
+        }
+
+        $bonus = (float) ($request->bonus ?? 0);
+
         $gajiHarian  = $gajiPokok / 22;
         $gajiKerja   = $gajiHarian * $workDays;
         $tarifLembur = ($gajiPokok / 22 / 8) * 1.5;
@@ -53,13 +81,16 @@ class PayrollController extends Controller
         $total       = max(0, $gajiKerja + $gajiLembur + $bonus - $deduction);
 
         return response()->json([
-            'gaji_pokok'   => $gajiPokok,
-            'gaji_kerja'   => round($gajiKerja),
-            'gaji_lembur'  => round($gajiLembur),
-            'bonus'        => $bonus,
-            'deduction'    => $deduction,
-            'total_salary' => round($total),
-            'formatted'    => [
+            'gaji_pokok'    => $gajiPokok,
+            'gaji_kerja'    => round($gajiKerja),
+            'gaji_lembur'   => round($gajiLembur),
+            'bonus'         => $bonus,
+            'deduction'     => $deduction,
+            'total_salary'  => round($total),
+            'work_days'     => $workDays,
+            'overtime_hours'=> $overtimeHours,
+            'rekap_absensi' => $rekapAbsensi,
+            'formatted'     => [
                 'gaji_pokok'   => 'Rp ' . number_format($gajiPokok, 0, ',', '.'),
                 'gaji_kerja'   => 'Rp ' . number_format($gajiKerja, 0, ',', '.'),
                 'gaji_lembur'  => 'Rp ' . number_format($gajiLembur, 0, ',', '.'),

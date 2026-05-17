@@ -7,6 +7,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\AbsensiController;
 
 // Halaman utama
 Route::get('/', function () {
@@ -44,4 +45,10 @@ Route::middleware('auth')->group(function () {
     // Penggajian
     Route::post('/penggajian/preview', [PayrollController::class, 'preview'])->name('penggajian.preview');
     Route::resource('penggajian', PayrollController::class);
+
+    // Absensi
+    Route::get('/absensi/pengaturan', [AbsensiController::class, 'pengaturan'])->name('absensi.pengaturan');
+    Route::post('/absensi/pengaturan', [AbsensiController::class, 'simpanPengaturan'])->name('absensi.simpanPengaturan');
+    Route::post('/absensi/rekap', [AbsensiController::class, 'rekap'])->name('absensi.rekap');
+    Route::resource('absensi', AbsensiController::class);
 });

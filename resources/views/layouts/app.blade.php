@@ -456,6 +456,11 @@
         <div class="nav-label">Penggajian</div>
 
         <div class="nav-item">
+            <a href="{{ route('absensi.index') }}" class="nav-link {{ request()->is('absensi*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-check"></i> Absensi
+            </a>
+        </div>
+        <div class="nav-item">
             <a href="{{ route('penggajian.index') }}" class="nav-link {{ request()->is('penggajian*') ? 'active' : '' }}">
                 <i class="bi bi-cash-stack"></i> Penggajian
             </a>
